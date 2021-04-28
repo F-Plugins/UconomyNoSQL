@@ -1,18 +1,18 @@
-﻿using MySql.Data.MySqlClient;
-using Rocket.Core.Logging;
+﻿using Rocket.Core.Logging;
 using System;
+using LiteDB;
 
 namespace fr34kyn01535.Uconomy
 {
     public class DatabaseManager
     {
-        internal DatabaseManager()
+        /*internal DatabaseManager()
         {
             new I18N.West.CP1250(); //Workaround for database encoding issues with mono
             CheckSchema();
-        }
+        }*/
 
-        private MySqlConnection createConnection()
+        /*private MySqlConnection createConnection()
         {
             MySqlConnection connection = null;
             try
@@ -25,7 +25,7 @@ namespace fr34kyn01535.Uconomy
                 Logger.LogException(ex);
             }
             return connection;
-        }
+        }*/
 
         /// <summary>
         /// returns the current balance of an account
@@ -37,14 +37,24 @@ namespace fr34kyn01535.Uconomy
             decimal output = 0;
             try
             {
-                MySqlConnection connection = createConnection();
+                /*MySqlConnection connection = createConnection();
                 MySqlCommand command = connection.CreateCommand();
                 command.CommandText = "select `balance` from `" + Uconomy.Instance.Configuration.Instance.DatabaseTableName + "` where `steamId` = '" + id.ToString() + "';";
                 connection.Open();
                 object result = command.ExecuteScalar();
                 if (result != null) Decimal.TryParse(result.ToString(), out output);
                 connection.Close();
-                Uconomy.Instance.OnBalanceChecked(id, output);
+                Uconomy.Instance.OnBalanceChecked(id, output);*/
+
+                using (var db = new LiteDatabase(Uconomy.Instance.Directory + @"\file.db"))
+                {
+                    var col = db.GetCollection<Account>("accounts");
+
+                    var find = col.Query().Where(x => x.steamId == id).FirstOrDefault();
+
+                    output = find.balance;
+                    Uconomy.Instance.OnBalanceChecked(id, output);
+                }
             }
             catch (Exception ex)
             {
@@ -64,14 +74,29 @@ namespace fr34kyn01535.Uconomy
             decimal output = 0;
             try
             {
-                MySqlConnection connection = createConnection();
+                /*MySqlConnection connection = createConnection();
                 MySqlCommand command = connection.CreateCommand();
                 command.CommandText = "update `" + Uconomy.Instance.Configuration.Instance.DatabaseTableName + "` set `balance` = balance + (" + increaseBy + ") where `steamId` = '" + id.ToString() + "'; select `balance` from `" + Uconomy.Instance.Configuration.Instance.DatabaseTableName + "` where `steamId` = '" + id.ToString() + "'";
                 connection.Open();
                 object result = command.ExecuteScalar();
                 if (result != null) Decimal.TryParse(result.ToString(), out output);
                 connection.Close();
-                Uconomy.Instance.BalanceUpdated(id, increaseBy);
+                Uconomy.Instance.BalanceUpdated(id, increaseBy);*/
+
+                using (var db = new LiteDatabase(Uconomy.Instance.Directory + @"\file.db"))
+                {
+                    var col = db.GetCollection<Account>("accounts");
+
+                    var find = col.Query().Where(x => x.steamId == id).FirstOrDefault();
+
+                    output = find.balance + increaseBy;
+
+                    find.balance = output;
+
+                    col.Update(find);
+
+                    Uconomy.Instance.BalanceUpdated(id, increaseBy);
+                }
             }
             catch (Exception ex)
             {
@@ -85,7 +110,7 @@ namespace fr34kyn01535.Uconomy
         {
             try
             {
-                MySqlConnection connection = createConnection();
+                /*MySqlConnection connection = createConnection();
                 MySqlCommand command = connection.CreateCommand();
                 int exists = 0;
                 command.CommandText = "SELECT EXISTS(SELECT 1 FROM `" + Uconomy.Instance.Configuration.Instance.DatabaseTableName + "` WHERE `steamId` ='" + id + "' LIMIT 1);";
@@ -100,6 +125,22 @@ namespace fr34kyn01535.Uconomy
                     connection.Open();
                     command.ExecuteNonQuery();
                     connection.Close();
+                }*/
+
+                using (var db = new LiteDatabase(Uconomy.Instance.Directory + @"\file.db"))
+                {
+                    var col = db.GetCollection<Account>("accounts");
+
+                    var find = col.Query().Where(x => x.steamId == id.ToString()).FirstOrDefault();
+
+                    if (find == null)
+                    {
+                        col.Insert(new Account
+                        {
+                            steamId = id.ToString(),
+                            balance = Uconomy.Instance.Configuration.Instance.InitialBalance
+                        });
+                    }
                 }
             }
             catch (Exception ex)
@@ -109,7 +150,7 @@ namespace fr34kyn01535.Uconomy
 
         }
 
-        internal void CheckSchema()
+        /*internal void CheckSchema()
         {
             try
             {
@@ -130,6 +171,6 @@ namespace fr34kyn01535.Uconomy
             {
                 Logger.LogException(ex);
             }
-        }
+        }*/
     }
 }
