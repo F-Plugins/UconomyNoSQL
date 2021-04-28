@@ -46,7 +46,7 @@ namespace fr34kyn01535.Uconomy
                 connection.Close();
                 Uconomy.Instance.OnBalanceChecked(id, output);*/
 
-                using (var db = new LiteDatabase(Uconomy.Instance.Directory + @"\file.db"))
+                using (var db = new LiteDatabase(Uconomy.Instance.Directory + @"/file.db"))
                 {
                     var col = db.GetCollection<Account>("accounts");
 
@@ -83,7 +83,7 @@ namespace fr34kyn01535.Uconomy
                 connection.Close();
                 Uconomy.Instance.BalanceUpdated(id, increaseBy);*/
 
-                using (var db = new LiteDatabase(Uconomy.Instance.Directory + @"\file.db"))
+                using (var db = new LiteDatabase(Uconomy.Instance.Directory + @"/file.db"))
                 {
                     var col = db.GetCollection<Account>("accounts");
 
@@ -127,7 +127,7 @@ namespace fr34kyn01535.Uconomy
                     connection.Close();
                 }*/
 
-                using (var db = new LiteDatabase(Uconomy.Instance.Directory + @"\file.db"))
+                using (var db = new LiteDatabase(Uconomy.Instance.Directory + @"/file.db"))
                 {
                     var col = db.GetCollection<Account>("accounts");
 
